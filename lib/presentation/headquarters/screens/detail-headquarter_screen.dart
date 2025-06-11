@@ -13,8 +13,8 @@ import 'package:http/http.dart' as http;
 class DetailHeadquarterScreen extends StatefulWidget {
   final int headquarterId;
   final HeadquarterRepository repository;
-  final HeadquarterResponse? headquarter; // Opcional: si ya tenemos los datos
-  final TableRepository? tableRepository; // Añadir como opcional
+  final HeadquarterResponse? headquarter;
+  final TableRepository? tableRepository;
 
   const DetailHeadquarterScreen({
     Key? key,
@@ -36,13 +36,22 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
   String? _errorMessage;
   String? _tablesErrorMessage;
   late final TableRepository _tableRepository;
+  String _selectedCapacity = 'Select';
+  String _selectedZone = 'Select';
 
+  static const Color primaryColor = Color(0xFF8B5A3C);
+  static const Color backgroundColor = Color(0xFFF5F5F5);
+  static const Color textPrimaryColor = Colors.black;
+  static const Color textSecondaryColor = Color(0xFF666666);
+  static const Color cardColor = Colors.white;
+  static const double cardBorderRadius = 12.0;
+
+  List<TableResponse> _allTables = []; // Lista completa sin filtrar
 
   @override
   void initState() {
     super.initState();
 
-    // Inicializar el repositorio de mesas si no se proporciona
     _tableRepository = widget.tableRepository ?? TableRepository(
         apiClient: ApiClient(
           httpClient: http.Client(),
@@ -52,7 +61,6 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
         tableStorage: TableStorage(storage: FlutterSecureStorage())
     );
 
-    // Si ya tenemos los datos de la sede, no necesitamos cargarlos
     if (widget.headquarter != null) {
       _headquarter = widget.headquarter;
       _isLoading = false;
@@ -77,6 +85,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
       });
     }
   }
+
   Future<void> _loadTables() async {
     setState(() {
       _isLoadingTables = true;
@@ -88,7 +97,8 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
       final tables = data.map((item) => TableResponse.fromJson(item)).toList();
 
       setState(() {
-        _tables = tables;
+        _allTables = tables; // Guardamos todas las mesas
+        _applyFilters(); // Aplicamos los filtros iniciales
         _isLoadingTables = false;
       });
     } catch (e) {
@@ -98,17 +108,82 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
       });
     }
   }
+
+  void _applyFilters() {
+    setState(() {
+      _tables = _allTables.where((table) {
+        // Si no hay filtros seleccionados, mostrar todas las mesas
+        bool matchesCapacity = _selectedCapacity == 'Select' ||
+            table.seats.toString() == _selectedCapacity;
+
+        bool matchesZone = _selectedZone == 'Select' ||
+            table.zone == _selectedZone;
+
+        // La mesa debe coincidir con ambos filtros
+        return matchesCapacity && matchesZone;
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(_headquarter?.name ?? 'Detalles de Sede'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF8B5A3C)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          _headquarter?.name ?? 'Detalles de Sede',
+          style: const TextStyle(
+            color: Color(0xFF8B5A3C),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5A3C)),
+      ))
           : _errorMessage != null
           ? _buildErrorView()
           : _buildHeadquarterDetails(),
+    );
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 180,
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAE0D5),
+        borderRadius: BorderRadius.circular(cardBorderRadius),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.restaurant,
+            size: 48,
+            color: primaryColor,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _headquarter?.name ?? "Sede Tavolo",
+            style: const TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -121,6 +196,9 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _loadHeadquarterDetails,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5A3C),
+            ),
             child: const Text('Reintentar'),
           )
         ],
@@ -134,175 +212,297 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Información general
-          _buildSectionTitle('Información General'),
-          _buildInfoItem('Nombre', _headquarter!.name),
-          _buildInfoItem('Dirección', _headquarter!.streetAddress),
+          _buildImagePlaceholder(),
+          // Información de la sede
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Información:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildInfoRow(Icons.location_on_outlined, _headquarter!.streetAddress),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.access_time_outlined, '${_headquarter!.openingTime} - ${_headquarter!.closingTime}'),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.phone_outlined, _headquarter!.landlinePhone),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 24),
 
-          // Contacto
-          _buildSectionTitle('Contacto'),
-          _buildInfoItem('Teléfono fijo', _headquarter!.landlinePhone),
-          _buildInfoItem('Teléfono móvil', _headquarter!.mobilePhone),
+          // Filtros
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildDropdown('Capacidad:', _selectedCapacity, ['Select', '2', '4', '6', '8'], (value) {
+                    setState(() {
+                      _selectedCapacity = value!;
+                    });
+                  }),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDropdown('Zona:', _selectedZone, ['Select', 'Terraza', 'Interior', 'VIP'], (value) {
+                    setState(() {
+                      _selectedZone = value!;
+                    });
+                  }),
+                ),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 24),
 
-          // Horarios
-          _buildSectionTitle('Horarios'),
-          _buildInfoItem('Horario de apertura', _headquarter!.openingTime),
-          _buildInfoItem('Horario de cierre', _headquarter!.closingTime),
-          _buildInfoItem('Intervalo de citas', '${_headquarter!.intervalMinutes} minutos'),
-
-          const SizedBox(height: 24),
-
-          // Ubicación
-          _buildSectionTitle('Ubicación'),
-          _buildInfoItem('Latitud', _headquarter!.latitude.toString()),
-          _buildInfoItem('Longitud', _headquarter!.longitude.toString()),
-
-          // Aquí se podría agregar un mapa en el futuro
-          const SizedBox(height: 16),
-          const Text('Mapa disponible próximamente...'),
-
-          const SizedBox(height: 32),
-
-          // Sección para mesas
-          const SizedBox(height: 32),
-          _buildSectionTitle('Mesas Disponibles'),
-
-          // Mostrar estado de carga o error de las mesas
+          // Lista de mesas
           _isLoadingTables
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5A3C)),
+          ))
               : _tablesErrorMessage != null
               ? _buildTablesErrorView()
               : _buildTablesList(),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 100), // Espacio para el bottom nav
         ],
       ),
     );
   }
 
-  Widget _buildTablesErrorView() {
-    return Column(
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
       children: [
-        Text('Error al cargar mesas: $_tablesErrorMessage',
-            style: const TextStyle(color: Colors.red)),
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: _loadTables,
-          child: const Text('Reintentar'),
+        Icon(
+          icon,
+          size: 20,
+          color: const Color(0xFF8B5A3C),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF666666),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              items: items.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(
+                    item,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: item == 'Select' ? const Color(0xFF999999) : Colors.black,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                onChanged(newValue);
+                // Aplicar filtros cuando cambia la selección
+                _applyFilters();
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTablesErrorView() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          Text('Error al cargar mesas: $_tablesErrorMessage',
+              style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: _loadTables,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5A3C),
+            ),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildTablesList() {
     if (_tables.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.0),
-        child: Center(child: Text('No hay mesas disponibles en esta sede')),
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        child: Center(child: Text('No hay mesas disponibles con los filtros seleccionados',
+          style: TextStyle(fontSize: 16, color: textSecondaryColor),
+        )),
       );
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: _tables.length,
-      itemBuilder: (context, index) {
-        final table = _tables[index];
-        return Card(
-          elevation: 2,
-          child: InkWell(
-            onTap: () {
-              // Aquí puedes navegar a la pantalla de detalles de mesa
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Mesa ${table.tableNumber}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text('${table.seats} asientos'),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: table.status == 'AVAILABLE' ? Colors.green : Colors.red,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      table.status == 'AVAILABLE' ? 'Disponible' : 'Ocupada',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text('Zona: ${table.zone}', style: const TextStyle(fontSize: 12)),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1.5, // Aumenta este valor para hacer las tarjetas más pequeñas
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
         ),
+        itemCount: _tables.length,
+        itemBuilder: (context, index) {
+          final table = _tables[index];
+          return _buildTableCard(
+            'Mesa #${table.tableNumber}',
+            '${table.seats} personas',
+            table.zone,
+            table.status == 'AVAILABLE',
+          );
+        },
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+  Widget _buildTableCard(String title, String capacity, String zone, bool isAvailable) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(cardBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textPrimaryColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.people, size: 14, color: primaryColor),
+                const SizedBox(width: 4),
+                Text(
+                  capacity,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 14, color: primaryColor),
+                const SizedBox(width: 4),
+                Text(
+                  zone,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: textSecondaryColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            SizedBox(
+              width: double.infinity,
+              height: 30,
+              child: ElevatedButton(
+                onPressed: isAvailable ? () {} : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  disabledBackgroundColor: Colors.grey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                child: Text(
+                  'Reservar',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isAvailable ? Colors.white : Colors.white70,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
