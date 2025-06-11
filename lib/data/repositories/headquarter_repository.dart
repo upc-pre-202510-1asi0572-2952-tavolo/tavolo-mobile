@@ -14,12 +14,11 @@ class HeadquarterRepository {
   });
 
   // Métodos para manejar las sedes
-
   // Obtiene la lista de todas las sedes.
   Future<List<dynamic>> getHeadquarters() async {
     try {
-      final response = await apiClient.get('/api/v1/headquarters');
-      final List<dynamic> headquarters = json.decode(response);
+      // La respuesta ya viene decodificada del apiClient
+      final List<dynamic> headquarters = await apiClient.get('/api/v1/headquarters');
 
       // Guardar la lista de sedes en el almacenamiento
       await headquarterStorage.saveHeadquarters(json.encode(headquarters));
