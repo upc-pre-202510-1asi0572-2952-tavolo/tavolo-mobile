@@ -10,6 +10,8 @@ import '../../../storage/secure_storage.dart';
 import '../../../storage/table_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../map/map_screen.dart';
+
 class DetailHeadquarterScreen extends StatefulWidget {
   final int headquarterId;
   final HeadquarterRepository repository;
@@ -293,6 +295,9 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+              Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 const Text(
                   'Información:',
                   style: TextStyle(
@@ -301,12 +306,30 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
                     color: Colors.black,
                   ),
                 ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MapScreen(headquarter: _headquarter!),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.map, size: 16),
+                  label: const Text('Ver en mapa'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
                 const SizedBox(height: 16),
                 _buildInfoRow(Icons.location_on_outlined, _headquarter!.streetAddress),
-                const SizedBox(height: 12),
-                _buildInfoRow(Icons.access_time_outlined, '${_headquarter!.openingTime} - ${_headquarter!.closingTime}'),
-                const SizedBox(height: 12),
-                _buildInfoRow(Icons.phone_outlined, _headquarter!.landlinePhone),
               ],
             ),
           ),
