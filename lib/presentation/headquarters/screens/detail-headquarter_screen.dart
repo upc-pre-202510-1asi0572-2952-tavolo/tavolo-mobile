@@ -109,6 +109,78 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
     }
   }
 
+  Future<void> _showReservationConfirmation(String tableTitle) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 28),
+              const SizedBox(width: 8),
+              const Text(
+                'Reserva confirmada',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Has reservado $tableTitle en ${_headquarter?.name}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: textPrimaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Horario: 19:00 - 21:00',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textSecondaryColor,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text(
+                'Ver mis reservas',
+                style: TextStyle(color: primaryColor),
+              ),
+              onPressed: () {
+                // Navegar a la pantalla de reservas
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _applyFilters() {
     setState(() {
       _tables = _allTables.where((table) {
@@ -217,19 +289,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
           _buildImagePlaceholder(),
           // Información de la sede
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -366,18 +426,47 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
 
   Widget _buildTablesErrorView() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFCDD2)),
+      ),
       child: Column(
         children: [
-          Text('Error al cargar mesas: $_tablesErrorMessage',
-              style: const TextStyle(color: Colors.red)),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: _loadTables,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5A3C),
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Color(0xFFE57373),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No se pudieron cargar las mesas',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFD32F2F),
             ),
-            child: const Text('Reintentar'),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Ocurrió un error inesperado. Por favor, intenta nuevamente.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              color: textSecondaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadTables,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
           ),
         ],
       ),
@@ -386,12 +475,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
 
   Widget _buildTablesList() {
     if (_tables.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-        child: Center(child: Text('No hay mesas disponibles con los filtros seleccionados',
-          style: TextStyle(fontSize: 16, color: textSecondaryColor),
-        )),
-      );
+      return _buildEmptyTablesMessage();
     }
 
     return Container(
@@ -401,7 +485,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.5, // Aumenta este valor para hacer las tarjetas más pequeñas
+          childAspectRatio: 1.5,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -439,50 +523,36 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: textPrimaryColor,
+                color: isAvailable ? primaryColor : textSecondaryColor,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.people, size: 14, color: primaryColor),
-                const SizedBox(width: 4),
-                Text(
-                  capacity,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: textSecondaryColor,
-                  ),
-                ),
-              ],
+            Text(
+              'Capacidad: $capacity',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF666666),
+              ),
             ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 14, color: primaryColor),
-                const SizedBox(width: 4),
-                Text(
-                  zone,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: textSecondaryColor,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              'Zona: $zone',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF666666),
+              ),
             ),
-            const SizedBox(height: 5),
+            const Spacer(),
             SizedBox(
               width: double.infinity,
               height: 30,
               child: ElevatedButton(
-                onPressed: isAvailable ? () {} : null,
+                onPressed: isAvailable
+                    ? () => _showReservationConfirmation(title)
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   disabledBackgroundColor: Colors.grey,
@@ -503,6 +573,47 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyTablesMessage() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.table_bar,
+            size: 48,
+            color: Color(0xFFCCB3A2),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No hay mesas disponibles',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: primaryColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _selectedCapacity != 'Select' || _selectedZone != 'Select'
+                ? 'Prueba con otros filtros de búsqueda'
+                : 'En este momento no hay mesas disponibles en esta sede',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              color: textSecondaryColor,
+            ),
+          ),
+        ],
       ),
     );
   }

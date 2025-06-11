@@ -25,10 +25,6 @@ class SearchHeadquartersScreen extends StatefulWidget {
 }
 
 class _SearchHeadquartersScreenState extends State<SearchHeadquartersScreen> {
-  static const Color primaryColor = Color(0xFF8B5A3C);
-  static const Color backgroundColor = Color(0xFFF5F5F5);
-  static const Color cardColor = Colors.white;
-  static const String apiBaseUrl = 'http://10.0.2.2:8080';
 
   List<HeadquarterResponse> _headquarters = [];
   Map<int, List<TableResponse>> _headquarterTables = {};
@@ -186,13 +182,33 @@ class _SearchHeadquartersScreenState extends State<SearchHeadquartersScreen> {
                       color: Color(0xFF8B5A3C),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  Text(
+                    headquarter.closingTime != null
+                        ? 'Horario: ${headquarter.openingTime} - ${headquarter.closingTime}'
+                        : 'Horario: ${headquarter.openingTime}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF666666),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    headquarter.streetAddress != null
+                        ? 'Dirección: ${headquarter.streetAddress}'
+                        : 'Dirección no disponible',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF666666),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     'Mesas disponibles: ${_getAvailableTablesCount(headquarter)}',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF8B5A3C),
+                      color: Color(0xFF666666),
                     ),
                   ),
                 ],
@@ -207,22 +223,6 @@ class _SearchHeadquartersScreenState extends State<SearchHeadquartersScreen> {
   int _getAvailableTablesCount(HeadquarterResponse headquarter) {
     final tables = _headquarterTables[headquarter.id] ?? [];
     return tables.where((table) => table.status == 'AVAILABLE').length;
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      )
-    );
   }
 
 }
