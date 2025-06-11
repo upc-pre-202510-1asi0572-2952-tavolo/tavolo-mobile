@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tavolo_mobile/navigation/bottom_navigation.dart';
 import 'package:tavolo_mobile/presentation/auth/bloc/auth_bloc.dart';
 import 'package:tavolo_mobile/presentation/auth/bloc/auth_state.dart';
 import 'package:tavolo_mobile/presentation/auth/screens/login_screen.dart';
 import 'package:tavolo_mobile/presentation/auth/screens/register_screen.dart';
-import 'package:tavolo_mobile/presentation/home/screens/home_screen.dart';
+import 'package:tavolo_mobile/presentation/headquarters/screens/search-headquarters_screen.dart';
+
+import '../presentation/home/screens/home_screen.dart';
+import '../presentation/menu/screens/menu_screen.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -46,9 +50,29 @@ class AppRouter {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
+      
+      // Rutas con navegación inferior
+      ShellRoute(
+        builder: (context, state, child) {
+          return ScaffoldWithBottomNavigation(
+            currentRoute: state.matchedLocation,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/home',
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/headquarters',
+            builder: (context, state) => const SearchHeadquartersScreen()
+          ),
+          GoRoute(
+            path: '/menu',
+            builder: (context, state) => const MenuScreen(),
+          ),
+        ],
       ),
     ],
   );

@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
     
     final appRouter = AppRouter(authBloc: authBloc);
 
+
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>.value(value: authBloc),
