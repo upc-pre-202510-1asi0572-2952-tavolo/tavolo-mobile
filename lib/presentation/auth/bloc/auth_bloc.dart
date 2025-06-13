@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tavolo_mobile/data/models/signin_request.dart';
-import 'package:tavolo_mobile/data/models/signup_request.dart';
+import 'package:tavolo_mobile/data/models/iam/signin_request.dart';
+import 'package:tavolo_mobile/data/models/iam/signup_request.dart';
 import 'package:tavolo_mobile/data/repositories/auth_repository.dart';
 import 'package:tavolo_mobile/error/exceptions.dart';
 import 'package:tavolo_mobile/presentation/auth/bloc/auth_event.dart';

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:tavolo_mobile/conf/api_client.dart';
-import 'package:tavolo_mobile/data/models/signin_response.dart';
-import 'package:tavolo_mobile/data/models/signin_request.dart';
-import 'package:tavolo_mobile/data/models/signup_request.dart';
-import 'package:tavolo_mobile/data/models/signup_response.dart';
+import 'package:tavolo_mobile/data/models/iam/signin_response.dart';
+import 'package:tavolo_mobile/data/models/iam/signin_request.dart';
+import 'package:tavolo_mobile/data/models/iam/signup_request.dart';
+import 'package:tavolo_mobile/data/models/iam/signup_response.dart';
 import 'package:tavolo_mobile/error/exceptions.dart';
 import 'package:tavolo_mobile/storage/secure_storage.dart';
 

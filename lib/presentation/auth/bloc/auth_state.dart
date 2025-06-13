@@ -1,4 +1,4 @@
-import 'package:tavolo_mobile/data/models/signin_response.dart';
+import 'package:tavolo_mobile/data/models/iam/signin_response.dart';
 
 abstract class AuthState {}
 
