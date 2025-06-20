@@ -290,89 +290,90 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
       child: Column(
         children: [
           _buildImagePlaceholder(),
-          // Información de la sede
+          // Información
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Información:',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MapScreen(headquarter: _headquarter!),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Información:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.map, size: 16),
-                  label: const Text('Ver en mapa'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MapScreen(headquarter: _headquarter!),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.map, size: 16, color: Colors.white),
+                      label: const Text('Ver en mapa',
+                          style: TextStyle(fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                        color: Colors.white) ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        minimumSize: const Size(10, 32),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildInfoRow(Icons.location_on_outlined, _headquarter!.streetAddress),
               ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // Filtros
+          // Filtros - reducidos en altura
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Expanded(
-                  child: _buildDropdown('Capacidad:', _selectedCapacity, ['Select', '2', '4', '6', '8'], (value) {
-                    setState(() {
-                      _selectedCapacity = value!;
-                    });
-                  }),
+                Expanded(child: _buildDropdown('Capacidad:', _selectedCapacity,
+                    ['Select', '2', '4', '6', '8'], (value) {
+                      setState(() {
+                        _selectedCapacity = value!;
+                        _applyFilters();
+                      });
+                    }),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDropdown('Zona:', _selectedZone, ['Select', 'Terraza', 'Interior', 'VIP'], (value) {
-                    setState(() {
-                      _selectedZone = value!;
-                    });
-                  }),
+                const SizedBox(width: 12),
+                Expanded(child: _buildDropdown('Zona:', _selectedZone,
+                    ['Select', 'Terraza', 'Interior', 'VIP'], (value) {
+                      setState(() {
+                        _selectedZone = value!;
+                        _applyFilters();
+                      });
+                    }),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Lista de mesas
           _isLoadingTables
               ? const Center(child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5A3C)),
+            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
           ))
               : _tablesErrorMessage != null
               ? _buildTablesErrorView()
               : _buildTablesList(),
 
-          const SizedBox(height: 100), // Espacio para el bottom nav
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -407,14 +408,14 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: Colors.black,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             border: Border.all(color: const Color(0xFFE0E0E0)),
             borderRadius: BorderRadius.circular(8),
@@ -424,23 +425,21 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
+              icon: const Icon(Icons.arrow_drop_down, size: 20),
+              itemHeight: 48,
+              style: const TextStyle(fontSize: 13, color: Colors.black),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
                   child: Text(
                     item,
                     style: TextStyle(
-                      fontSize: 14,
                       color: item == 'Select' ? const Color(0xFF999999) : Colors.black,
                     ),
                   ),
                 );
               }).toList(),
-              onChanged: (String? newValue) {
-                onChanged(newValue);
-                // Aplicar filtros cuando cambia la selección
-                _applyFilters();
-              },
+              onChanged: onChanged,
             ),
           ),
         ),
@@ -509,7 +508,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.5,
+          childAspectRatio: 0.95,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -517,55 +516,70 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
         itemBuilder: (context, index) {
           final table = _tables[index];
           return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: EdgeInsets.zero,
             elevation: 3,
+            color: const Color(0xFFF1ECE6), // Color crema para las cards
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Mesa #${table.tableNumber}",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text("Capacidad: ${table.seats} personas"),
-                  Text("Zona: ${table.zone}"),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerRight,
+                  Text(
+                    "Mesa #${table.tableNumber}",
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Capacidad: ${table.seats} personas",
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  Text(
+                    "Zona: ${table.zone}",
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton(
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (_) => ReservationModal(
-                                  tableId: table.id,
-                                  tableName: "Mesa #${table.tableNumber}",
-                                  capacity: table.seats,
-                                  zone: table.zone,
-                              ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.brown,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => ReservationModal(
+                            tableId: table.id,
+                            tableName: "Mesa #${table.tableNumber}",
+                            capacity: table.seats,
+                            zone: table.zone,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.brown,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8
                         ),
-                        child: const Text("Reservar"),
+                      ),
+                      child: const Text(
+                        "Reservar",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white, // Texto blanco para los botones
+                        ),
+                      ),
                     ),
                   )
                 ],
               ),
             ),
           );
-        }
-        /*itemBuilder: (context, index) {
-          final table = _tables[index];
-          return _buildTableCard(
-            'Mesa #${table.tableNumber}',
-            '${table.seats} personas',
-            table.zone,
-            table.status == 'AVAILABLE',
-          );
-        },*/
+        },
       ),
     );
   }
@@ -573,7 +587,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
   Widget _buildTableCard(String title, String capacity, String zone, bool isAvailable) {
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: const Color(0xFFF5E9D9), // Color crema
         borderRadius: BorderRadius.circular(cardBorderRadius),
         boxShadow: [
           BoxShadow(
@@ -633,7 +647,7 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isAvailable ? Colors.white : Colors.white70,
+                    color: Colors.white, // Texto blanco
                   ),
                 ),
               ),
