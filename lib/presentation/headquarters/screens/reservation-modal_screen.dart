@@ -9,6 +9,9 @@ import 'package:tavolo_mobile/data/repositories/booking_repository.dart';
 import 'package:tavolo_mobile/storage/booking_storage.dart';
 import 'package:tavolo_mobile/storage/secure_storage.dart';
 
+import '../../../data/repositories/auth_repository.dart';
+
+
 class ReservationModal extends StatefulWidget {
   final int tableId;
   final String tableName;
@@ -36,6 +39,8 @@ class _ReservationModalState extends State<ReservationModal> {
   List<dynamic> _availableSlots = [];
   String? _errorMessage;
   late final BookingRepository _repository;
+  late final AuthRepository _authRepository;
+  late final ApiClient _apiClient;
 
   @override
   void initState() {
@@ -43,13 +48,25 @@ class _ReservationModalState extends State<ReservationModal> {
 
     // Inicializar datos de localización
     initializeDateFormatting('es_ES', null).then((_) {
+      final secureStorage = SecureStorage(storage: FlutterSecureStorage());
+
       _repository = BookingRepository(
           apiClient: ApiClient(
             httpClient: http.Client(),
-            secureStorage: SecureStorage(storage: FlutterSecureStorage()),
+            secureStorage: secureStorage,
             baseUrl: 'http://10.0.2.2:8080',
           ),
           bookingStorage: BookingStorage(storage: FlutterSecureStorage())
+      );
+
+      // Inicializar el repositorio de autenticación
+      _authRepository = AuthRepository(
+        secureStorage: secureStorage,
+        apiClient: ApiClient(
+          httpClient: http.Client(),
+          secureStorage: secureStorage,
+          baseUrl: 'http://10.0.2.2:8080',
+        ),
       );
 
       _loadAvailableSlots();
@@ -119,10 +136,18 @@ class _ReservationModalState extends State<ReservationModal> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
-      final clientId = 1; // En producción, obtener del servicio de autenticación
+      // Obtener el usuario actual y su ID
+      final currentUser = await _authRepository.getCurrentUser();
+      final clientId = currentUser?.id ?? 0;
+
+      // Verificar que tenemos un ID válido
+      if (clientId == 0) {
+        throw Exception('No se pudo obtener el ID del usuario');
+      }
 
       String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
