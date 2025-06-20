@@ -12,6 +12,7 @@ import 'package:tavolo_mobile/presentation/headquarters/screens/search-headquart
 
 import '../conf/api_client.dart';
 import '../data/repositories/headquarter_repository.dart';
+import '../presentation/headquarters/screens/detail-headquarter_screen.dart';
 import '../presentation/home/screens/home_screen.dart';
 import '../presentation/menu/screens/menu_screen.dart';
 import '../storage/headquarter_storage.dart';
@@ -85,6 +86,25 @@ class AppRouter {
                       )
                   )
               )
+          ),
+          GoRoute(
+            path: '/headquarters/:headquarterId',
+            builder: (context, state) {
+              final headquarterId = int.parse(state.pathParameters['headquarterId']!);
+              return DetailHeadquarterScreen(
+                headquarterId: headquarterId,
+                repository: HeadquarterRepository(
+                    apiClient: ApiClient(
+                      httpClient: http.Client(),
+                      secureStorage: SecureStorage(storage: FlutterSecureStorage()),
+                      baseUrl: 'http://10.0.2.2:8080',
+                    ),
+                    headquarterStorage: HeadquarterStorage(
+                        storage: FlutterSecureStorage()
+                    )
+                ),
+              );
+            },
           ),
           GoRoute(
             path: '/menu',

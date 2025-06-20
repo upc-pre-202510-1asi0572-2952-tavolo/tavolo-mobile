@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tavolo_mobile/data/models/headquarters/headquarter_response.dart';
 import 'package:tavolo_mobile/data/repositories/headquarter_repository.dart';
-
 import '../../../conf/api_client.dart';
 import '../../../data/models/tables/table_response.dart';
 import '../../../data/repositories/table_repository.dart';
