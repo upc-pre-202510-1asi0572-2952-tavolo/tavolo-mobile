@@ -100,4 +100,5 @@ class BookingRepository {
       throw Exception('Error al obtener los horarios disponibles: $e');
     }
   }
+
 }
