@@ -11,6 +11,7 @@ import '../../../storage/table_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../map/map_screen.dart';
+import 'reservation-modal_screen.dart';
 
 class DetailHeadquarterScreen extends StatefulWidget {
   final int headquarterId;
@@ -515,13 +516,56 @@ class _DetailHeadquarterScreenState extends State<DetailHeadquarterScreen> {
         itemCount: _tables.length,
         itemBuilder: (context, index) {
           final table = _tables[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            elevation: 3,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Mesa #${table.tableNumber}",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text("Capacidad: ${table.seats} personas"),
+                  Text("Zona: ${table.zone}"),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (_) => ReservationModal(
+                                  tableId: table.id,
+                                  tableName: "Mesa #${table.tableNumber}",
+                                  capacity: table.seats,
+                                  zone: table.zone,
+                              ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.brown,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        child: const Text("Reservar"),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+        /*itemBuilder: (context, index) {
+          final table = _tables[index];
           return _buildTableCard(
             'Mesa #${table.tableNumber}',
             '${table.seats} personas',
             table.zone,
             table.status == 'AVAILABLE',
           );
-        },
+        },*/
       ),
     );
   }
