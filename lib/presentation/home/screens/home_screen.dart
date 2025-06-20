@@ -156,6 +156,7 @@ class _HomeContentState extends State<_HomeContent> {
 
       // Cargar las reservas del usuario
       final bookings = await widget.bookingRepository.getBookingsByClientId(clientId);
+      bookings.sort((a, b) => b['id'].compareTo(a['id']));
 
       setState(() {
         _activeBookings = bookings;
